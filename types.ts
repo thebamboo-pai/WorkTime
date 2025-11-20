@@ -2,12 +2,14 @@ export enum ViewState {
     AUTH = 'AUTH',
     DASHBOARD = 'DASHBOARD',
     CHECK_IN = 'CHECK_IN',
-    CHECK_OUT = 'CHECK_OUT'
+    CHECK_OUT = 'CHECK_OUT',
+    REPORT = 'REPORT'
 }
 
 export interface User {
     username: string;
     deviceId: string; // Browser-generated UUID to simulate MAC address binding
+    role: 'ADMIN' | 'USER';
 }
 
 export interface WorkLog {

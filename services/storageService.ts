@@ -21,28 +21,59 @@ export const getDeviceId = (): string => {
 
 export const registerUser = (username: string): User => {
     const deviceId = getDeviceId();
-    const user: User = { username, deviceId };
+    
+    // Rule: Only 'bamboo' gets ADMIN role.
+    const role = username.toLowerCase() === 'bamboo' ? 'ADMIN' : 'USER';
+    
+    const user: User = { username, deviceId, role };
     // In a real app, this would POST to a backend to save the binding
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     return user;
 };
 
 export const loginUser = (username: string): { success: boolean; message: string; user?: User } => {
+    const cleanUsername = username.trim();
+
+    // --- SPECIAL RULE FOR ADMIN 'bamboo' ---
+    // 1. No need to register (Default user)
+    // 2. No device restriction
+    if (cleanUsername.toLowerCase() === 'bamboo') {
+        const bambooUser: User = {
+            username: 'bamboo',
+            deviceId: getDeviceId(), // Use current device ID for session, but don't validate it against history
+            role: 'ADMIN'
+        };
+        // Update local storage to set the session
+        localStorage.setItem(USER_KEY, JSON.stringify(bambooUser));
+        return { success: true, message: 'Welcome Administrator', user: bambooUser };
+    }
+
+    // --- STANDARD USER FLOW ---
     const storedUserStr = localStorage.getItem(USER_KEY);
     
     if (!storedUserStr) {
         return { success: false, message: 'User not found. Please register first.' };
     }
 
-    const storedUser: User = JSON.parse(storedUserStr);
+    // Parse and handle potential missing role from older data
+    const storedData = JSON.parse(storedUserStr);
+    // Fallback for legacy data: default to USER
+    const role = storedData.role || 'USER';
+    
+    const storedUser: User = { ...storedData, role };
     const currentDeviceId = getDeviceId();
 
-    if (storedUser.username !== username) {
+    if (storedUser.username !== cleanUsername) {
          return { success: false, message: 'Username does not match the registered user on this device.' };
     }
 
     if (storedUser.deviceId !== currentDeviceId) {
         return { success: false, message: 'Device mismatch. You must use the registered device.' };
+    }
+
+    // Update storage if role was missing (migration)
+    if (!storedData.role) {
+        localStorage.setItem(USER_KEY, JSON.stringify(storedUser));
     }
 
     return { success: true, message: 'Login successful', user: storedUser };

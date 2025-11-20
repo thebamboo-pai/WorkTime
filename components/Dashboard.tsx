@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { User, WorkLog } from '../types';
-import { LogIn, LogOut, History } from 'lucide-react';
+import { LogIn, LogOut, History, FileText, Shield } from 'lucide-react';
 import { getActiveJob, getLogs } from '../services/storageService';
 
 interface DashboardProps {
     user: User;
-    onNavigate: (view: 'CHECK_IN' | 'CHECK_OUT') => void;
+    onNavigate: (view: 'CHECK_IN' | 'CHECK_OUT' | 'REPORT') => void;
     onLogout: () => void;
 }
 
@@ -30,7 +30,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onLogout }) => 
             <div className="bg-white p-6 pt-8 pb-6 shadow-sm">
                 <div className="flex justify-between items-start">
                     <div>
-                        <p className="text-slate-500 text-sm mb-1">Welcome back,</p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-slate-500 text-sm mb-1">Welcome back,</p>
+                            {user.role === 'ADMIN' && (
+                                <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <Shield className="w-3 h-3" /> ADMIN
+                                </span>
+                            )}
+                        </div>
                         <h1 className="text-2xl font-bold text-slate-900">{user.username}</h1>
                     </div>
                     <button 
@@ -91,6 +98,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onLogout }) => 
                         <span className="font-semibold">Check Out</span>
                     </button>
                 </div>
+
+                {/* Secondary Actions - ADMIN ONLY */}
+                {user.role === 'ADMIN' && (
+                    <button 
+                        onClick={() => onNavigate('REPORT')}
+                        className="w-full p-4 rounded-xl bg-white border border-slate-200 text-slate-700 flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"
+                    >
+                        <FileText className="w-5 h-5 text-indigo-600" />
+                        <span className="font-semibold">View Monthly Report (Admin)</span>
+                    </button>
+                )}
 
                 {/* Recent History */}
                 <div>

@@ -4,6 +4,7 @@ import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import CheckIn from './components/CheckIn';
 import CheckOut from './components/CheckOut';
+import Report from './components/Report';
 
 const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
@@ -19,9 +20,10 @@ const App: React.FC = () => {
         setCurrentView(ViewState.AUTH);
     };
 
-    const handleNavigate = (view: 'CHECK_IN' | 'CHECK_OUT') => {
+    const handleNavigate = (view: 'CHECK_IN' | 'CHECK_OUT' | 'REPORT') => {
         if (view === 'CHECK_IN') setCurrentView(ViewState.CHECK_IN);
         if (view === 'CHECK_OUT') setCurrentView(ViewState.CHECK_OUT);
+        if (view === 'REPORT') setCurrentView(ViewState.REPORT);
     };
 
     const handleBackToDashboard = () => {
@@ -58,6 +60,14 @@ const App: React.FC = () => {
                         user={user} 
                         onBack={handleBackToDashboard} 
                         onSuccess={handleBackToDashboard} 
+                    />
+                );
+                break;
+            case ViewState.REPORT:
+                content = (
+                    <Report 
+                        user={user} 
+                        onBack={handleBackToDashboard} 
                     />
                 );
                 break;
