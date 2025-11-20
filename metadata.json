@@ -1,0 +1,7 @@
+{
+  "name": "WorkTime Tracker",
+  "description": "Employee check-in/out system with device binding and geolocation verification.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
