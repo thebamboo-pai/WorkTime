@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { User } from '../types';
 import { getLogs } from '../services/storageService';
-import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, Clock, Briefcase, Sparkles, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, Clock, Briefcase, Sparkles, User as UserIcon, Download } from 'lucide-react';
 
 interface ReportProps {
     user: User;
@@ -59,16 +59,66 @@ const Report: React.FC<ReportProps> = ({ user, onBack }) => {
         return `${hours}h ${minutes}m`;
     };
 
+    const downloadCSV = () => {
+        if (monthlyLogs.length === 0) {
+            alert("No data to export for this month.");
+            return;
+        }
+
+        const headers = ['Username', 'Job Name', 'Date', 'Check In', 'Check Out', 'Duration (Min)', 'AI Summary'];
+        const rows = monthlyLogs.map(log => {
+            const checkIn = new Date(log.checkInTime);
+            const checkOut = log.checkOutTime ? new Date(log.checkOutTime) : null;
+            const durationMin = checkOut ? Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000) : 0;
+
+            return [
+                log.username,
+                `"${log.jobName.replace(/"/g, '""')}"`, // Escape quotes for CSV
+                checkIn.toLocaleDateString('en-GB'), // DD/MM/YYYY format usually
+                checkIn.toLocaleTimeString(),
+                checkOut ? checkOut.toLocaleTimeString() : '',
+                durationMin,
+                `"${(log.aiSummary || '').replace(/"/g, '""')}"`
+            ];
+        });
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.join(','))
+        ].join('\n');
+
+        // Add BOM for Excel/Thai character support
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `work_report_${currentDate.getFullYear()}_${currentDate.getMonth() + 1}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="flex flex-col h-full bg-slate-50">
              {/* Header */}
-            <div className="bg-white p-4 shadow-sm flex items-center gap-4 z-10">
-                <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full text-slate-600">
-                    <ArrowLeft className="w-6 h-6" />
-                </button>
-                <h1 className="text-xl font-bold text-slate-800">
-                    {user.role === 'ADMIN' ? 'Admin Monthly Report' : 'My Monthly Report'}
-                </h1>
+            <div className="bg-white p-4 shadow-sm flex items-center justify-between z-10">
+                <div className="flex items-center gap-4">
+                    <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full text-slate-600">
+                        <ArrowLeft className="w-6 h-6" />
+                    </button>
+                    <h1 className="text-xl font-bold text-slate-800">
+                        {user.role === 'ADMIN' ? 'Admin Report' : 'My Report'}
+                    </h1>
+                </div>
+                {user.role === 'ADMIN' && (
+                    <button 
+                        onClick={downloadCSV} 
+                        className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full transition-colors"
+                        title="Download CSV"
+                    >
+                        <Download className="w-6 h-6" />
+                    </button>
+                )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
